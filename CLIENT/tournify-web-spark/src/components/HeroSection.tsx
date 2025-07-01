@@ -38,7 +38,7 @@ const HeroSection = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
               <Link to="/events">
                 <Button size="lg" className="bg-red-500 hover:bg-red-600 text-white font-semibold px-8 py-4 text-lg">
-                  Explore Events
+                  Explore Tournaments
                 </Button>
               </Link>
               <Link to="/create-tournament">

@@ -1,4 +1,4 @@
-
+import { Link } from "react-router-dom";
 import { Heart, Calendar, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,7 +36,7 @@ const EventsSection = () => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-            Explore Upcoming Events
+            Explore Upcoming Tournaments
           </h2>
           <div className="flex space-x-2">
             <Button variant="outline" size="icon" className="rounded-full">
@@ -94,10 +94,12 @@ const EventsSection = () => {
                   ))}
                 </div>
                 
-                <Button className="w-full bg-primary hover:bg-primary/90 text-white group">
-                  Explore More
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
+                <Link to={`/tournament/${event.id}`}>
+  <Button className="w-full bg-primary hover:bg-primary/90 text-white group">
+    Explore More
+    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+  </Button>
+</Link>
               </CardContent>
             </Card>
           ))}

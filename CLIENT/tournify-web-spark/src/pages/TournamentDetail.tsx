@@ -6,9 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useParams } from "react-router-dom";
+import { useState } from "react";
 
 const TournamentDetail = () => {
   const { id } = useParams();
+
+  const [submitted, setSubmitted] = useState(false);
 
   const tournamentData = {
     name: "State Level Basketball Tournament",
@@ -85,6 +88,25 @@ const TournamentDetail = () => {
     { name: "Team Football Club", location: "Bengaluru Rivals", category: "U-17" },
     { name: "Team Football Club", location: "Bengaluru Rivals", category: "U-17" }
   ];
+
+  const [showForm, setShowForm] = useState(false);
+const [formData, setFormData] = useState({
+  name: "",
+  email: "",
+  phone: ""
+});
+
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  setFormData({ ...formData, [e.target.name]: e.target.value });
+};
+
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  console.log("Form Submitted:", formData);
+  setSubmitted(true); // show the Payment Summary
+};
+
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -180,9 +202,72 @@ const TournamentDetail = () => {
                     <h3 className="text-lg font-bold text-gray-900 mb-2">event details go here</h3>
                   </div>
                   
-                  <Button className="w-full mt-6 bg-primary hover:bg-primary/90 text-white py-3">
-                    Register Now
-                  </Button>
+                  <Button
+  className="w-full mt-6 bg-primary hover:bg-primary/90 text-white py-3"
+  onClick={() => setShowForm(!showForm)}
+>
+  {showForm ? "Hide Registration Form" : "Register Now"}
+</Button>
+
+{showForm && (
+  <form onSubmit={handleSubmit} className="mt-6 bg-white border p-6 rounded-lg space-y-4">
+    <input
+      type="text"
+      name="name"
+      placeholder="Full Name"
+      value={formData.name}
+      onChange={handleChange}
+      className="w-full p-3 border border-gray-300 rounded-md"
+      required
+    />
+    <input
+      type="email"
+      name="email"
+      placeholder="Email"
+      value={formData.email}
+      onChange={handleChange}
+      className="w-full p-3 border border-gray-300 rounded-md"
+      required
+    />
+    <input
+      type="tel"
+      name="phone"
+      placeholder="Mobile Number"
+      value={formData.phone}
+      onChange={handleChange}
+      className="w-full p-3 border border-gray-300 rounded-md"
+      required
+    />
+    <Button type="submit" className="w-full bg-primary text-white hover:bg-primary/90">
+      Submit Registration
+    </Button>
+
+    {submitted && (
+  <div className="mt-6 border rounded-lg p-6 shadow-sm bg-white">
+    <h3 className="text-lg font-bold text-gray-900 mb-4">Payment Summary</h3>
+    <div className="space-y-2 text-sm text-gray-700">
+      <div className="flex justify-between">
+        <span>Registration Fee</span>
+        <span>₹500</span>
+      </div>
+      <div className="flex justify-between">
+        <span>GST (18%)</span>
+        <span>₹90</span>
+      </div>
+      <div className="flex justify-between font-semibold text-primary">
+        <span>Total</span>
+        <span>₹590</span>
+      </div>
+    </div>
+    <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-white">
+      Proceed to Payment
+    </Button>
+  </div>
+)}
+
+  </form>
+)}
+
                 </TabsContent>
                 
                 <TabsContent value="fixtures" className="mt-6">
