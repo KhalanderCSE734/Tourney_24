@@ -1,4 +1,4 @@
-import BookingModel from '../../Models/Player/BookingModel.js';
+import BookingModel from '../../Models/BookingModel.js';
 
 const createBooking = async (req, res) => {
   try {

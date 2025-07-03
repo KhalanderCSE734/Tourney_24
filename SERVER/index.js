@@ -1,6 +1,6 @@
 
 
-import playerRoutes from './Routes/Player/playerRoutes.js';
+// import playerRoutes from './Routes/Player/playerRoutes.js';
 import bookingRoutes from './Routes/Player/bookingRoutes.js';
 import express from 'express';
 import cors from 'cors';
