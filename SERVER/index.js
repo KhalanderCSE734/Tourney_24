@@ -1,4 +1,7 @@
 
+
+import playerRoutes from './Routes/Player/playerRoutes.js';
+import bookingRoutes from './Routes/Player/bookingRoutes.js';
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
@@ -43,6 +46,7 @@ connectMongoDB(process.env.MONGODB_URI).then(()=>{
 })
 
 
+app.use('/api/player/bookings', bookingRoutes);
 
   
 
