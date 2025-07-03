@@ -21,7 +21,6 @@ const PORT = process.env.PORT || 8000 ;
 
 const corsOptions = {
     origin:[process.env.FRONT_END_URL],
-    // methods:"GET , POST , PUT ,DELETE, PATCH, HEAD",
     methods:"GET,POST,PUT,DELETE,PATCH,HEAD",
     credentials:true,
 }
