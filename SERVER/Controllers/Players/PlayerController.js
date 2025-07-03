@@ -1,23 +1,27 @@
 import bcrypt from 'bcryptjs';
-import cloudinary from '../../Config/cloudinary.js';
+
 import validator from 'validator';
 
 
-import Organizer from '../Models/OrganizerModel.js';
-import Tournament from '../Models/TournamentModel.js';
+import PlayerModel from '../../Models/Player/PlayerModel.js';
 
-import { setOrganizerTokenAndCookies } from '../../Middlewares/jwtAuth.js';
+import cloudinary from '../../Config/cloudinary.js';
+
+
+import { setUserTokenAndCookie } from '../../Middlewares/jwtAuth.js';
+
+
 import generateSecureOTP from '../../Config/getOTP.js';
 
-
+import transporter from '../../Config/nodemailer.js';
 
 
 const signUp = async (req,res)=>{
     try{
 
-        const { fullName, email, password } = req.body;
+        const { fullName, email, password, phone, DateOfBirth, aadhaarImage } = req.body;
 
-        if(!fullName || !email || !password){
+        if(!fullName || !email || !password || !phone || !DateOfBirth || !aadhaarImage){
             return res.json({success:false,message:`All Fields Are Mandatory`});
         }
 
@@ -31,10 +35,10 @@ const signUp = async (req,res)=>{
         }
 
 
-        const organizerExists = await Organizer.findOne({email});
+        const userExists = await PlayerModel.findOne({email});
 
-        if(organizerExists && organizerExists.isAccountVerified){
-            return res.json({success:false,message:`Organizer With Provided Mail Already Exists`});
+        if(userExists && userExists.isAccountVerified){
+            return res.json({success:false,message:`User With Provided Mail Already Exists`});
         }
 
         const saltRound = await bcrypt.genSalt(10);
@@ -43,28 +47,31 @@ const signUp = async (req,res)=>{
 
 
 
-        // setUserTokenAndCookie(newUser,res);
-
-        // console.log("New User Created SUccessfully",newUser);
-
 
         const {OTP,hashedOTP,expiredAt} = await generateSecureOTP();
 
         let newUser = "";
         let updatedUser = "";
 
+         const image = await cloudinary.uploader.upload(aadhaarImage);
+
+         const uploadURL = image.secure_url;
+
+
         if(!userExists){
 
-            newUser = await Organizer.create({
+            newUser = await PlayerModel.create({
                 fullName,
                 email,
+                phone, DateOfBirth,
                 password:hashedPassword,
+                aadhaarImage:uploadURL,
                 verifyOtp:hashedOTP, 
                 verifyOtpExpiredAt: expiredAt
             })
             
         }else{
-            updatedUser = await Organizer.findOneAndUpdate({email},
+            updatedUser = await PlayerModel.findOneAndUpdate({email},
                 {
                     $set:{
                         fullName,
@@ -85,10 +92,10 @@ const signUp = async (req,res)=>{
             const mailOption = {
                 from:`Tourney 24 <${process.env.SENDER_EMAIL_SMT}>`,
                 to:email,
-                subject:`Welcom To Tourney 24`,
+                subject:`Welcom To Tourney 24 Community`,
                 html: `
                   <h1> Hello ${fullName}</h1>
-                  <h2>We Heartly Welcome You as Organizer in Tourney 24 </h2>
+                  <h2>We Heartly Welcome You as Player in Tourney 24  </h2>
                   <p>Enter the OTP  <b> ${OTP} </b> To Create Account With The Provided email: <strong>${email}</strong></p>
                   <p>Enjoy your experience 💖</p>
                   
@@ -102,16 +109,17 @@ const signUp = async (req,res)=>{
 
         }catch(error){
             console.log(`Error while Generating the mail ${error}, ${error.message}`);
-            return res.json({success:false,message:"Error In Sending OTP to Organizer's Email"});
+            return res.json({success:false,message:"Error In Sending OTP to Player's Email"});
         }
 
 
 
+        
         res.json({success:true,message:`OTP Has Been Sent SuccessFully`});
 
 
     }catch(error){
-        console.log(`Error In Signup End-Point of (Organizer) ${error}`);
+        console.log(`Error In Signup End-Point of User (Player) ${error}`);
         res.json({success:false,message:`Error In Signup End Point ${error}`});
     }
 }
@@ -122,7 +130,7 @@ const signUp = async (req,res)=>{
 const verifyEmailWithOTP = async (req,res)=>{
     try{
 
-        const { OTP, organizerMail } = req.body;
+        const { OTP, playerMail } = req.body;
 
         console.log(req.body);
 
@@ -130,30 +138,30 @@ const verifyEmailWithOTP = async (req,res)=>{
             return res.json({sucess:false,message:"Enter the OTP"});
         }
 
-        const organizer = await Organizer.findOne({email:organizerMail});
-        console.log(organizer);
-        if(!organizer){
+        const player = await PlayerModel.findOne({email:playerMail});
+        console.log(player);
+        if(!player){
             return res.json({success:false,message:"Email Not Found"});
         }
 
-        console.log(organizer);
+        console.log(player);
         
-        if(organizer.verifyOtp==""){
+        if(player.verifyOtp==""){
             return res.json({success:false,message:`OTP Is Not Found`})
         }
 
-        const isOTPVerified = await bcrypt.compare(String(OTP),organizer.verifyOtp);
+        const isOTPVerified = await bcrypt.compare(String(OTP),player.verifyOtp);
 
-        if(organizer.verifyOtp=='' || !isOTPVerified){
+        if(player.verifyOtp=='' || !isOTPVerified){
             return res.json({success:false,message:`Invalid OTP`});
         }
 
-        if(organizer.verifyOtpExpiredAt < Date.now()){
+        if(player.verifyOtpExpiredAt < Date.now()){
             return res.json({success:false,message:`OTP Has Been Expired`});
         }
 
-        const newOrganizer = await Organizer.findOneAndUpdate(
-            {email:organizerMail},
+        const newUser = await PlayerModel.findOneAndUpdate(
+            {email:playerMail},
             {
                 $set:{
                     isAccountVerified:true,
@@ -164,9 +172,10 @@ const verifyEmailWithOTP = async (req,res)=>{
             {new:true}
         ) 
 
-        setOrganizerTokenAndCookies(newOrganizer,res);
+        setUserTokenAndCookie(newUser,res);
 
-        return res.json({success:true,message:`Account Has Been Created And Verified Succcessfully, Start Creating the Tournaments`});
+        return res.json({success:true,message:`Account Has Been Created And Verified Succcessfully, Continue Registering for Events`});
+
 
 
     }catch(error){
@@ -184,62 +193,35 @@ const login = async (req,res)=>{
         const { email, password } = req.body;
         
         if(!email || !password) {
-            return res.json({success:true,message:`All Mentioned Fields Are Mandatory To Login`});
+            return res.json({success:true,message:`All Mentioned Fields Are Mandatory To Sign up`});
         }
 
-        const organizer = await Organizer.findOne({email});
+        const user = await PlayerModel.findOne({email});
 
-        if(!organizer){
-            return res.json({success:false,message:`Organizer With the Provided Mail Doesn't Exist `});
+        if(!user){
+            return res.json({success:false,message:`User With the Provided Mail Doesn't Exist `});
         }
         
-        if(!organizer.isAccountVerified){
-            return res.json({succes:false,message:`Organizer With the Provided Mail Doesn't Exist, Please Sign Up to continue`});
+        if(!user.isAccountVerified){
+            return res.json({succes:false,message:`User With the Provided Mail Doesn't Exist, Please Sign Up to continue`});
         }
 
-        const isPassWordCorrect = await bcrypt.compare(password,organizer.password); 
+        const isPassWordCorrect = await bcrypt.compare(password,user.password); 
 
         if(!isPassWordCorrect){
             return res.json({success:false,message:`Incorrect PassWord, Please Try Again`});
         }
 
-        setOrganizerTokenAndCookies(organizer,res);
+        setUserTokenAndCookie(user,res);
 
-        return res.json({success:true,message:`Organizer Logged In SuccessFully`});
+        return res.json({success:true,message:`Player Logged In SuccessFully`});
 
 
     }catch(error){
-        console.log(`Error in Login End Point of Organizer ${error}`);
+        console.log(`Error in Login End Point of Player ${error}`);
         res.json({success:false,message:`Error In Login End Point ${error}`});
     }
 }
 
 
-
-
-const createTournament = async (req,res)=>{
-    try{
-        const {name,description,coverImage,startDate,endDate,location} = req.body;
-
-        if(!name || !description || !coverImage || !startDate || !endDate || !location){
-            return res.json({success:false,message:"All Fields are Mandatory"});
-        }
-
-        const tournament = await Tournament.create({
-            name,
-            description,
-            coverImage,
-            startDate,
-            endDate,
-            location,
-            createdBy:req.organizer._id
-        })
-    }catch(error){
-        return res.json({success:false,message:"Error In Creating Tournament in Organizer Controller"});
-    }
-}
-
-
-
-
-export {signUp,verifyEmailWithOTP,login}
+export {signUp,verifyEmailWithOTP,login};
