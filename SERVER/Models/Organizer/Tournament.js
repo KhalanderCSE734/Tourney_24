@@ -80,9 +80,13 @@ const TournamentSchema = new mongoose.Schema({
             displayInFixture: Boolean
         }]
     },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    totalPlayers:{
+        type:Number,
+        required:true
+    },
+    // createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now }
-});
+}, {timestamps:true});
 
 
 const Tournament = mongoose.model('tournament', TournamentSchema);

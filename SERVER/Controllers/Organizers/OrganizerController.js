@@ -219,27 +219,97 @@ const login = async (req,res)=>{
 
 const createTournament = async (req,res)=>{
     try{
-        const {name,description,coverImage,startDate,endDate,location} = req.body;
+        const organization = req.organizer;
 
-        if(!name || !description || !coverImage || !startDate || !endDate || !location){
+        if(!organization){
+            return res.json({success:false,message:"Session Ended Sign In Again Please" });
+        }
+
+        const organizer = await Organizer.findById(organization);
+
+        if(!organizer){
+            return res.json({success:false,message:"Organizer Not Found"});
+        }
+
+
+        const {tournamentName,description,coverImage,startDate,endDate,location} = req.body;
+
+        if(!tournamentName || !description || !coverImage || !startDate || !endDate || !location){
             return res.json({success:false,message:"All Fields are Mandatory"});
         }
 
+        const image = await cloudinary.uploader.upload(coverImage);
+
+         const uploadURL = image.secure_url;
+
+
         const tournament = await Tournament.create({
-            name,
+            name:tournamentName,
             description,
-            coverImage,
+            coverImage:uploadURL,
             startDate,
             endDate,
             location,
-            createdBy:req.organizer._id
+            organization
         })
+
+        return res.json({success:true,message:"Tournament Created SuccessFully"});
+
     }catch(error){
         return res.json({success:false,message:"Error In Creating Tournament in Organizer Controller"});
     }
 }
 
+const getAllTournaments = async (req,res)=>{
+    try{
+        const organization = req.organizer;
+
+        if(!organization){
+            return res.json({success:false,message:"Session Ended Sign In Again Please" });
+        }
+
+        const organizer = await Organizer.findById(organization);
+
+        if(!organizer){
+            return res.json({success:false,message:"Organizer Not Found"});
+        }
+
+        const tournaments = await Tournament.find({organization});
+
+        return res.json({success:true,message:tournaments});
+
+    }catch(error){
+        return res.json({success:false,message:"Error In Creating Tournament in Organizer Controller"});
+    }
+}
+
+const getParticularTournament = async (req,res)=>{
+    try{
+        const organization = req.organizer;
+
+        if(!organization){
+            return res.json({success:false,message:"Session Ended Sign In Again Please" });
+        }
+
+        const organizer = await Organizer.findById(organization);
+
+        if(!organizer){
+            return res.json({success:false,message:"Organizer Not Found"});
+        }
+
+        const tournament = await Tournament.findById(req.params.tournamentId); // Pass the Tournament Id in parameter in Route
+
+        if(!tournament){
+            return res.json({success:false,message:"Tournament Not Found"});
+        }
+
+        // const tournamentDetails = await Tournament.findById(req.params.tournamentId).populate('events').populate('teams');
+        return res.json({success:true,message:tournament});
+    }catch(error){
+        return res.json({success:false,message:"Error In Getting Particular Tournament"});
+    }
+
+}
 
 
-
-export {signUp,verifyEmailWithOTP,login}
+export {signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament};
