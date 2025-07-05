@@ -30,13 +30,30 @@ const PlayerSchema = new mongoose.Schema({
     tournament:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'tournament',
-        required:true,
+        // required:true,
     },
     events:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'event',
-        required:true,
+        // required:true,
     },
+    
+    isAccountVerified:{
+        type:Boolean,
+        default:false,
+    },
+    verifyOtp:{
+        type:String,
+        default:"",
+    },
+    verifyOtpExpiredAt:{
+        type:Number,
+        default:0,
+    },
+    isVerifiedByAdmin:{
+        type:Boolean,
+        default:false,
+    }
 })
 
 const PlayerModel = mongoose.model('player',PlayerSchema);

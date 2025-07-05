@@ -7,7 +7,7 @@ const TournamentSchema = new mongoose.Schema({
     },
     type:{
         type:String,
-        enum:['public','private'],
+        enum:['Public','Private'],
         default:'public'
     },
     sport:{
@@ -39,10 +39,10 @@ const TournamentSchema = new mongoose.Schema({
         enum: ['upcoming', 'active', 'completed', 'cancelled'], 
         default: 'upcoming' 
     },
-    isPublic: { 
-        type: Boolean, 
-        default: true 
-    },
+    // isPublic: { 
+    //     type: Boolean, 
+    //     default: true 
+    // },
     isVerified: { 
         type: Boolean, 
         default: false 
@@ -64,15 +64,31 @@ const TournamentSchema = new mongoose.Schema({
             ref: 'team' 
         }
     ],
-    settings: {
-        name:String,
-        url: String,
-        otp: String,
-        seedingOptionInFixtures: Boolean,
-        askEmailFromPlayer: Boolean,
-        askMobileFromPlayer: Boolean,
-        askAdditionalInfo: Boolean,
-        showFixtures: Boolean,
+    // settings: {
+    //     name:String,
+    //     url: String,
+    //     otp: String,
+    //     seedingOptionInFixtures: Boolean,
+    //     askEmailFromPlayer: Boolean,
+    //     askMobileFromPlayer: Boolean,
+    //     askAdditionalInfo: Boolean,
+    //     showFixtures: Boolean,
+    //     customFields: [{
+    //         fieldName: String,
+    //         hintText: String,
+    //         isMandatory: Boolean,
+    //         displayInFixture: Boolean
+    //     }]
+    // },
+
+    settings:{
+        url: { type: String,default:null },
+        otp: { type: String, default:'983620' },
+        seedingOptionInFixtures: { type: Boolean, default: false },
+        askEmailFromPlayer: { type: Boolean, default: true },
+        askMobileFromPlayer: { type: Boolean, default: true },
+        askAdditionalInfo: { type: Boolean, default: true },
+        showFixtures: { type: Boolean, default: true },
         customFields: [{
             fieldName: String,
             hintText: String,
@@ -80,10 +96,10 @@ const TournamentSchema = new mongoose.Schema({
             displayInFixture: Boolean
         }]
     },
-    totalPlayers:{
-        type:Number,
-        required:true
-    },
+    // totalPlayers:{
+    //     type:Number,
+    //     required:true
+    // },
     // createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now }
 }, {timestamps:true});

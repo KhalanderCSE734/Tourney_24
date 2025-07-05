@@ -19,9 +19,9 @@ import transporter from '../../Config/nodemailer.js';
 const signUp = async (req,res)=>{
     try{
 
-        const { fullName, email, password, phone, DateOfBirth, aadhaarImage } = req.body;
+        const { fullName, email, password, phoneNumber, dateOfBirth, aadhaarCard } = req.body;
 
-        if(!fullName || !email || !password || !phone || !DateOfBirth || !aadhaarImage){
+        if(!fullName || !email || !password || !phoneNumber || !dateOfBirth || !aadhaarCard){
             return res.json({success:false,message:`All Fields Are Mandatory`});
         }
 
@@ -50,10 +50,13 @@ const signUp = async (req,res)=>{
 
         const {OTP,hashedOTP,expiredAt} = await generateSecureOTP();
 
+        // console.log(OTP,hashedOTP,expiredAt);
+
+
         let newUser = "";
         let updatedUser = "";
 
-         const image = await cloudinary.uploader.upload(aadhaarImage);
+         const image = await cloudinary.uploader.upload(aadhaarCard);
 
          const uploadURL = image.secure_url;
 
@@ -63,7 +66,8 @@ const signUp = async (req,res)=>{
             newUser = await PlayerModel.create({
                 fullName,
                 email,
-                phone, DateOfBirth,
+                phone:phoneNumber,
+                DateOfBirth:dateOfBirth,
                 password:hashedPassword,
                 aadhaarImage:uploadURL,
                 verifyOtp:hashedOTP, 
@@ -74,17 +78,20 @@ const signUp = async (req,res)=>{
             updatedUser = await PlayerModel.findOneAndUpdate({email},
                 {
                     $set:{
-                        fullName,
-                        email,
-                        password:hashedPassword,
-                        verifyOtp:hashedOTP, 
-                        verifyOtpExpiredAt: expiredAt
+                       fullName,
+                       email,
+                       phone:phoneNumber,
+                       DateOfBirth:dateOfBirth,
+                       password:hashedPassword,
+                       aadhaarImage:uploadURL,
+                       verifyOtp:hashedOTP, 
+                       verifyOtpExpiredAt: expiredAt
                     }
                 }
             )
         }
 
-
+        console.log(newUser,updatedUser);
 
         try{
            
@@ -96,7 +103,7 @@ const signUp = async (req,res)=>{
                 html: `
                   <h1> Hello ${fullName}</h1>
                   <h2>We Heartly Welcome You as Player in Tourney 24  </h2>
-                  <p>Enter the OTP  <b> ${OTP} </b> To Create Account With The Provided email: <strong>${email}</strong></p>
+                  <p>Enter the OTP <h1>  <b> ${OTP} </b> </h1> To Create Account With The Provided email: <strong>${email}</strong></p>
                   <p>Enjoy your experience 💖</p>
                   
                 `,
@@ -105,7 +112,7 @@ const signUp = async (req,res)=>{
             
 
             const info = await transporter.sendMail(mailOption);
-            console.log(`Mail Has been Sent With The message id :- ${info}, ${info.messageId}`); 
+            // console.log(`Mail Has been Sent With The message id :- ${info}, ${info.messageId}`); 
 
         }catch(error){
             console.log(`Error while Generating the mail ${error}, ${error.message}`);
@@ -149,6 +156,9 @@ const verifyEmailWithOTP = async (req,res)=>{
         if(player.verifyOtp==""){
             return res.json({success:false,message:`OTP Is Not Found`})
         }
+
+        console.log(OTP,player.verifyOtp);
+        console.log(String(OTP));
 
         const isOTPVerified = await bcrypt.compare(String(OTP),player.verifyOtp);
 
@@ -224,4 +234,81 @@ const login = async (req,res)=>{
 }
 
 
-export {signUp,verifyEmailWithOTP,login};
+
+
+const checkPlayerAuthorization = async (req,res)=>{
+
+    try{
+
+        return res.json({success:true,message:`Player is Authorised`});
+
+    }catch(error){
+        console.log(`Error In CHecking Player Authorisation End Point ${error}`);
+        res.json({success:false,message:`Error In Checking Player Authorization Rotue, ${error}`});
+    }
+
+}
+
+
+
+const getCurrentPlayer = async (req,res)=>{
+    
+    try{
+
+        
+        const  playerId  = req.user;
+        // console.log(userId);
+        if(!playerId){
+            return res.json({success:false,message:`Player is Not Authorized`});
+        }
+       
+        const player = await PlayerModel.findById(playerId).select(['-password']);
+
+        if(!player){
+            return res.json({success:false,message:`Player Doesn't Exist `});
+        }
+
+        
+
+        return res.json({success:true,message:player});
+
+          
+    }catch(error){
+        console.log(`Error In Getting Player Data End Point ${error}`);
+        res.json({success:false,message:`Error In Getting Player Data End Point, ${error}`});
+    }
+
+}
+
+
+
+
+const logOut = async (req,res)=>{
+    try{
+
+        res.clearCookie('JWT_User',{
+            httpOnly:true,
+            secure:process.env.NODE_ENV === 'production',
+            sameSite:process.env.NODE_ENV === 'development' ? 'strict' : 'none',
+        })
+
+        return res.json({success:true,message:`Player Logged Out Success Fully`});
+
+    }catch(error){
+        console.log(`Error In LogOut of Player End Point ${error}`);
+        res.json({success:false,message:`Error In LogOut of Player End Point, ${error}`});
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+export { signUp,verifyEmailWithOTP,login, checkPlayerAuthorization, getCurrentPlayer, logOut };

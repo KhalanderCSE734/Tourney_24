@@ -3,21 +3,21 @@ import cloudinary from '../../Config/cloudinary.js';
 import validator from 'validator';
 
 
-import Organizer from '../Models/OrganizerModel.js';
-import Tournament from '../Models/TournamentModel.js';
+import Organizer from '../../Models/Organizer/OrganizerModel.js';
+import Tournament from '../../Models/Organizer/Tournament.js';
 
 import { setOrganizerTokenAndCookies } from '../../Middlewares/jwtAuth.js';
 import generateSecureOTP from '../../Config/getOTP.js';
 
-
+import transporter from '../../Config/nodemailer.js';
 
 
 const signUp = async (req,res)=>{
     try{
 
-        const { fullName, email, password } = req.body;
+        const { fullName, email, password, organizationName, phone } = req.body;
 
-        if(!fullName || !email || !password){
+        if(!fullName || !email || !password || !organizationName || !phone){
             return res.json({success:false,message:`All Fields Are Mandatory`});
         }
 
@@ -53,11 +53,13 @@ const signUp = async (req,res)=>{
         let newUser = "";
         let updatedUser = "";
 
-        if(!userExists){
+        if(!organizerExists){
 
             newUser = await Organizer.create({
                 fullName,
                 email,
+                organizationName,
+                phone,
                 password:hashedPassword,
                 verifyOtp:hashedOTP, 
                 verifyOtpExpiredAt: expiredAt
@@ -69,6 +71,7 @@ const signUp = async (req,res)=>{
                     $set:{
                         fullName,
                         email,
+                        organizationName,phone,
                         password:hashedPassword,
                         verifyOtp:hashedOTP, 
                         verifyOtpExpiredAt: expiredAt
@@ -217,6 +220,78 @@ const login = async (req,res)=>{
 
 
 
+const checkOrganizerAuthorization = async (req,res)=>{
+
+    try{
+
+        return res.json({success:true,message:`Organizer is Authorised`});
+
+    }catch(error){
+        console.log(`Error In CHecking Organizer Authorisation End Point ${error}`);
+        res.json({success:false,message:`Error In Checking Organizer Authorization Rotue, ${error}`});
+    }
+
+}
+
+
+
+const getCurrentOrganizer = async (req,res)=>{
+    
+    try{
+
+        
+        const  organizerId  = req.organizer;
+        // console.log(userId);
+        if(!organizerId){
+            return res.json({success:false,message:`Organizer is Not Authorized`});
+        }
+       
+        const organizer = await Organizer.findById(organizerId).select(['-password']);
+
+        if(!organizer){
+            return res.json({success:false,message:`Organizer Doesn't Exist `});
+        }
+
+        
+
+        return res.json({success:true,message:organizer});
+
+          
+    }catch(error){
+        console.log(`Error In Getting Organizer Data End Point ${error}`);
+        res.json({success:false,message:`Error In Getting Organizer Data End Point, ${error}`});
+    }
+
+}
+
+
+
+
+const logOut = async (req,res)=>{
+    try{
+
+        res.clearCookie('JWT_Organizer',{
+            httpOnly:true,
+            secure:process.env.NODE_ENV === 'production',
+            sameSite:process.env.NODE_ENV === 'development' ? 'strict' : 'none',
+        })
+
+        return res.json({success:true,message:`Organizer Logged Out Success Fully`});
+
+    }catch(error){
+        console.log(`Error In LogOut of Organizer End Point ${error}`);
+        res.json({success:false,message:`Error In LogOut of Organizer End Point, ${error}`});
+    }
+}
+
+
+
+
+
+
+
+
+
 const createTournament = async (req,res)=>{
     try{
         const organization = req.organizer;
@@ -232,9 +307,9 @@ const createTournament = async (req,res)=>{
         }
 
 
-        const {tournamentName,description,coverImage,startDate,endDate,location} = req.body;
+        const {tournamentName,tournamentType,sport,description,coverImage,startDate,endDate,location} = req.body;
 
-        if(!tournamentName || !description || !coverImage || !startDate || !endDate || !location){
+        if(!tournamentName || !description || !coverImage || !startDate || !endDate || !location || !tournamentType || !sport){
             return res.json({success:false,message:"All Fields are Mandatory"});
         }
 
@@ -243,19 +318,67 @@ const createTournament = async (req,res)=>{
          const uploadURL = image.secure_url;
 
 
+     const defaultSettings = {
+      url: null,
+      otp: '983620',
+      seedingOptionInFixtures: false,
+      askEmailFromPlayer: true,
+      askMobileFromPlayer: true,
+      askAdditionalInfo: true,
+      showFixtures: true,
+      customFields: [
+        {
+          fieldName: "Name",
+          hintText: "",
+          isMandatory: true,
+          displayInFixture: false
+        },
+        {
+          fieldName: "Email",
+          hintText: "",
+          isMandatory: true,
+          displayInFixture: false
+        },
+        {
+          fieldName: "Phone",
+          hintText: "",
+          isMandatory: true,
+          displayInFixture: false
+        },
+        {
+          fieldName: "T-Shirt",
+          hintText: "T-Shirt Size",
+          isMandatory: false,
+          displayInFixture: false
+        },
+        {
+          fieldName: "Academy Name",
+          hintText: "Enter your Academy Name",
+          isMandatory: false,
+          displayInFixture: false
+        }
+      ]
+    };
+
         const tournament = await Tournament.create({
             name:tournamentName,
+            type:tournamentType,
+            sport,
             description,
             coverImage:uploadURL,
             startDate,
             endDate,
             location,
-            organization
+            organization,
+            settings: defaultSettings,
         })
+
+        console.log(tournament);
 
         return res.json({success:true,message:"Tournament Created SuccessFully"});
 
     }catch(error){
+        console.log(`Error In Creating Tournament in Organizer Controller ${error}`);
         return res.json({success:false,message:"Error In Creating Tournament in Organizer Controller"});
     }
 }
@@ -312,4 +435,4 @@ const getParticularTournament = async (req,res)=>{
 }
 
 
-export {signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament};
+export {signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, checkOrganizerAuthorization, getCurrentOrganizer, logOut};

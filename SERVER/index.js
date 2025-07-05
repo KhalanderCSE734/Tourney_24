@@ -1,7 +1,6 @@
 
 
 // import playerRoutes from './Routes/Player/playerRoutes.js';
-import bookingRoutes from './Routes/Player/bookingRoutes.js';
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
@@ -14,6 +13,13 @@ import cookieParser from 'cookie-parser';
 
 import { connectMongoDB } from './Config/Connection.js';
 
+
+
+import bookingRoutes from './Routes/Player/bookingRoutes.js';
+
+import OrganizerRoute from './Routes/Organizer/OrganizerRoute.js';
+
+import PlayerRoute from './Routes/Player/PlayerRoute.js';
 
 
 
@@ -46,9 +52,6 @@ connectMongoDB(process.env.MONGODB_URI).then(()=>{
 })
 
 
-app.use('/api/player/bookings', bookingRoutes);
-
-  
 
 
 
@@ -56,6 +59,15 @@ app.use('/api/player/bookings', bookingRoutes);
 app.get("/",(req,res)=>{
     res.send(`<h1> Getting Started With BackEnd Of Tourny </h1>`)
 })
+
+
+app.use('/api/player/bookings', bookingRoutes);
+
+app.use('/api/organizer/',OrganizerRoute);
+
+app.use('/api/player',PlayerRoute);
+
+
 
 
 
