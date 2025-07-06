@@ -5,6 +5,7 @@ import validator from 'validator';
 
 import Organizer from '../../Models/Organizer/OrganizerModel.js';
 import Tournament from '../../Models/Organizer/Tournament.js';
+import Events from '../../Models/Organizer/Event.js';
 
 import { setOrganizerTokenAndCookies } from '../../Middlewares/jwtAuth.js';
 import generateSecureOTP from '../../Config/getOTP.js';
@@ -420,7 +421,10 @@ const getParticularTournament = async (req,res)=>{
             return res.json({success:false,message:"Organizer Not Found"});
         }
 
-        const tournament = await Tournament.findById(req.params.tournamentId); // Pass the Tournament Id in parameter in Route
+        const { id } = req.params;
+        // console.log(id);
+
+        const tournament = await Tournament.findById(id); // Pass the Tournament Id in parameter in Route
 
         if(!tournament){
             return res.json({success:false,message:"Tournament Not Found"});
@@ -429,10 +433,104 @@ const getParticularTournament = async (req,res)=>{
         // const tournamentDetails = await Tournament.findById(req.params.tournamentId).populate('events').populate('teams');
         return res.json({success:true,message:tournament});
     }catch(error){
+        console.log(`Error In Getting Particular Tournament ${error}`);
         return res.json({success:false,message:"Error In Getting Particular Tournament"});
     }
 
 }
 
 
-export {signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, checkOrganizerAuthorization, getCurrentOrganizer, logOut};
+const createNewEvent = async (req,res)=>{
+    try{
+        const organization = req.organizer;
+
+        if(!organization){
+            return res.json({success:false,message:"Session Ended Sign In Again Please" });
+        }
+
+        const organizer = await Organizer.findById(organization);
+
+        if(!organizer){
+            return res.json({success:false,message:"Organizer Not Found"});
+        }
+
+        const { id } = req.params;
+        // console.log(id);
+
+        const tournament = await Tournament.findById(id); // Pass the Tournament Id in parameter in Route
+
+        if(!tournament){
+            return res.json({success:false,message:"Tournament Not Found"});
+        }
+
+
+        const { allowBooking, eventName, eventType, matchType, maxTeams, teamEntryFee } = req.body;
+
+        if( !eventName || !eventType || !matchType || !maxTeams || !teamEntryFee){
+            return res.json({success:false,message:"All Fields are mandatory to Fill"})
+        }
+        
+        const newEvent = await Events.create({
+            name:eventName,
+            tournament:id,
+            eventType,
+            matchType,
+            maxTeams,
+            entryFee:teamEntryFee,
+            allowBooking,
+            // numberOfParticipants
+        })
+
+
+        return res.json({success:true,message:'New Event Created SuccessFully'});
+
+    }catch(error){
+        console.log(`Error In Creating New Event ${error}`);
+        return res.json({success:false,message:"Error In Creating New Event"});
+    }
+}
+
+
+const getAllEvents = async (req,res)=>{
+     try{
+        const organization = req.organizer;
+
+        if(!organization){
+            return res.json({success:false,message:"Session Ended Sign In Again Please" });
+        }
+
+        const organizer = await Organizer.findById(organization);
+
+        if(!organizer){
+            return res.json({success:false,message:"Organizer Not Found"});
+        }
+
+        const { TournamentId } = req.params;
+        // console.log(id);
+
+        const tournament = await Tournament.findById(TournamentId); // Pass the Tournament Id in parameter in Route
+
+        if(!tournament){
+            return res.json({success:false,message:"Tournament Not Found"});
+        }
+
+        
+
+        const allEvents = await Events.find({
+            tournament:TournamentId
+        });
+
+
+
+        return res.json({success:true,message:allEvents});
+
+    }catch(error){
+        console.log(`Error In Gettinga All Event ${error}`);
+        return res.json({success:false,message:"Error In Gettinga All Event"});
+    }
+}
+
+
+
+
+export {signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, checkOrganizerAuthorization, getCurrentOrganizer, logOut, createNewEvent, getAllEvents};

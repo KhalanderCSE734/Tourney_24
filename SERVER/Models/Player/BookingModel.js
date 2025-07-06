@@ -24,6 +24,10 @@ const BookingSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'confirmed', 'cancelled'],
     default: 'pending',
+  },
+  bookingType:{
+    type:String,
+    enum:['online','offline'],
   }
 });
 

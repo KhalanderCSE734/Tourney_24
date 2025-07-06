@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 
 const EventSchema = new mongoose.Schema({
-    name: { 
+  name: { 
       type: String, 
       required: true 
     },
@@ -41,6 +41,7 @@ const EventSchema = new mongoose.Schema({
     type:Number,
     default:0,
   },
+  
 //   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team' }],
 //   fixtures: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Fixture' }]
 });

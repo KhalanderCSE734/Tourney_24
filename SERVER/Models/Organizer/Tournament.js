@@ -36,8 +36,8 @@ const TournamentSchema = new mongoose.Schema({
     },
     status: { 
         type: String, 
-        enum: ['upcoming', 'active', 'completed', 'cancelled'], 
-        default: 'upcoming' 
+        enum: ['Upcoming', 'Active', 'Completed', 'cancelled'], 
+        default: 'Upcoming' 
     },
     // isPublic: { 
     //     type: Boolean, 
