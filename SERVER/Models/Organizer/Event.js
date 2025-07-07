@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 
@@ -19,7 +18,8 @@ const EventSchema = new mongoose.Schema({
   },
   matchType: { 
     type: String, 
-    enum: ['knockout', 'round-robin', 'round-robin-knockout'], required: true 
+    enum: ['knockout', 'round-robin', 'round-robin-knockout'], 
+    required: true 
   },
   maxTeams: {
     type: Number,
@@ -41,8 +41,24 @@ const EventSchema = new mongoose.Schema({
     type:Number,
     default:0,
   },
+  eventType2:{
+    type:String,
+    enum:['individual','group'],
+    required:true,
+  },
   
-//   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team' }],
+  participantsIndividual: [
+    { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'teamIndividual'
+     }
+  ],
+  participantsGroup: [
+    { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'teamGroup'
+     }
+  ],
 //   fixtures: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Fixture' }]
 });
 

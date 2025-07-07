@@ -8,7 +8,7 @@ const TournamentSchema = new mongoose.Schema({
     type:{
         type:String,
         enum:['Public','Private'],
-        default:'public'
+        default:'Public'
     },
     sport:{
         type:String,
@@ -96,6 +96,19 @@ const TournamentSchema = new mongoose.Schema({
             displayInFixture: Boolean
         }]
     },
+
+participantsIndividual: [
+    { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'teamIndividual'
+     }
+  ],
+  participantsGroup: [
+    { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'teamGroup'
+     }
+  ],
     // totalPlayers:{
     //     type:Number,
     //     required:true

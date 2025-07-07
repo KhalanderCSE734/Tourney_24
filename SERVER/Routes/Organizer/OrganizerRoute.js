@@ -2,7 +2,7 @@ import express from 'express';
 
 const router = express.Router();
 
-import { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, getCurrentOrganizer, checkOrganizerAuthorization, logOut, createNewEvent, getAllEvents } from '../../Controllers/Organizers/OrganizerController.js';
+import { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, getCurrentOrganizer, checkOrganizerAuthorization, logOut, createNewEvent, getAllEvents, createIndividual, createGroupTeam, getIndividualTeam, getGroupTeam } from '../../Controllers/Organizers/OrganizerController.js';
 
 import { organizerAuthMidlleware } from '../../Middlewares/jwtAuth.js';
 
@@ -18,7 +18,10 @@ router.get('/getAllTournaments',organizerAuthMidlleware,getAllTournaments);
 router.get('/getParticularTournament/:id',organizerAuthMidlleware,getParticularTournament);
 router.post('/createEvent/:id',organizerAuthMidlleware,createNewEvent);
 router.get('/allEvents/:TournamentId',organizerAuthMidlleware,getAllEvents);
-
+router.post('/createIndividualTeam/:TournamentId/:eventId',organizerAuthMidlleware, createIndividual);
+router.post('/createGroupTeam/:TournamentId/:eventId',organizerAuthMidlleware, createGroupTeam);
+router.get('/getIndividualTeam/:TournamentId/:eventId',organizerAuthMidlleware, getIndividualTeam);
+router.get('/getGroupTeam/:TournamentId/:eventId',organizerAuthMidlleware, getGroupTeam);
 
 
 

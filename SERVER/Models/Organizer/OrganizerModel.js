@@ -22,14 +22,14 @@ const OrganizerSchema = new mongoose.Schema({
         type:String,
         required:true,
     },
-    tournament:{
+    tournament:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:'tournament',
-    },
-    events:{
+    }],
+    events:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:'event',
-    },
+    }],
     isAccountVerified:{
         type:Boolean,
         default:false,
@@ -45,13 +45,25 @@ const OrganizerSchema = new mongoose.Schema({
     memberAccess:[ 
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'organizer', // use your actual model name here
+            ref: 'organizer', 
         }
     ],
     isVerifiedByAdmin:{
         type:Boolean,
         default:false,
-    }
+    },
+    participantsIndividual: [
+      { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'teamIndividual'
+     }
+    ],
+    participantsGroup: [
+      { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'teamGroup'
+      }
+    ],
 })
         
 const Organizer = mongoose.model('organizer',OrganizerSchema);

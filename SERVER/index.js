@@ -22,17 +22,37 @@ import OrganizerRoute from './Routes/Organizer/OrganizerRoute.js';
 import PlayerRoute from './Routes/Player/PlayerRoute.js';
 
 
-
+import adminRoutes from './Routes/Admin/AdminRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 8000 ;
 
 
+// const corsOptions = {
+//     origin:[process.env.FRONT_END_URL],
+//     methods:"GET,POST,PUT,DELETE,PATCH,HEAD",
+//     credentials:true,
+// }
+
+
 const corsOptions = {
-    origin:[process.env.FRONT_END_URL],
-    methods:"GET,POST,PUT,DELETE,PATCH,HEAD",
-    credentials:true,
-}
+  origin: [
+    process.env.FRONT_END_URL || "http://localhost:5173", // Default Vite port
+    "http://localhost:5174", // Your current frontend port
+    "http://localhost:3000", // React default port
+    "http://localhost:5000", // Alternative port
+  ],
+  methods: "GET,POST,PUT,DELETE,PATCH,HEAD,OPTIONS",
+  credentials: true,
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+    "Origin",
+  ],
+};
+
 
 app.use(cors(corsOptions));
 
@@ -68,7 +88,7 @@ app.use('/api/organizer/',OrganizerRoute);
 app.use('/api/player',PlayerRoute);
 
 
-
+app.use('/admin',adminRoutes);
 
 
 
