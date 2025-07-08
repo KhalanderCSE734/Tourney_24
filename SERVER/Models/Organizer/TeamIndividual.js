@@ -45,6 +45,10 @@ const TeamIndividualSchema = new mongoose.Schema({
        type: mongoose.Schema.Types.ObjectId, 
        ref: 'tournament',
        required: true
+    },
+    dateAndTime:{
+      type: String,
+      required: true,
     }
 })
         

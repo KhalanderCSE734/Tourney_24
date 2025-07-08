@@ -606,6 +606,7 @@ const createIndividual = async(req,res)=>{
             event:event.name,
             eventId,
             player:check._id,
+            dateAndTime: new Date().toISOString(),
         })
 
         tournament.participantsIndividual.push(newIndividual._id);
@@ -720,6 +721,7 @@ const createGroupTeam = async(req,res)=>{
             event:event.name,
             eventId,
             tournamentId:TournamentId,
+            dateAndTime: new Date().toISOString(), 
         })
 
         tournament.participantsGroup.push(newTeam._id);
@@ -830,4 +832,55 @@ const getGroupTeam = async (req,res)=>{
 
 
 
-export { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, checkOrganizerAuthorization, getCurrentOrganizer, logOut, createNewEvent, getAllEvents, createIndividual, createGroupTeam, getIndividualTeam, getGroupTeam };
+const getPaymentDetails = async (req,res)=>{
+
+    try{
+
+        const organization = req.organizer;
+
+        if(!organization){
+            return res.json({success:false,message:"Session Ended Sign In Again Please" });
+        }
+
+        const organizer = await Organizer.findById(organization);
+
+        if(!organizer){
+            return res.json({success:false,message:"Organizer Not Found"});
+        }
+
+        const { TournamentId  } = req.params;
+
+        if(!TournamentId ){
+            return res.json({success:false,message:`Tournament Id is mandatory for Getting Payment Details `});
+        }
+
+        const tournament = await Tournament.findById(TournamentId);
+
+        if(!tournament){
+            return res.json({success:false,message:`Tournament Not Found`});
+        }
+
+        
+        const paymentsIndividual = await TeamIndividual.find({
+            tournamentId:TournamentId,
+        }).populate('eventId');
+        
+        const paymentsGroup = await TeamGroup.find({
+            tournamentId:TournamentId,
+        }).populate('eventId');
+
+        return res.json({success:true,paymentsIndividual, paymentsGroup});
+
+
+    }catch(error){
+        console.log(`Error In Getting Payment Details ${error}`);
+        return res.json({success:false,message:`Error In Getting Payment Details ${error}`});
+    }
+
+}
+
+
+
+
+
+export { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, checkOrganizerAuthorization, getCurrentOrganizer, logOut, createNewEvent, getAllEvents, createIndividual, createGroupTeam, getIndividualTeam, getGroupTeam, getPaymentDetails };
