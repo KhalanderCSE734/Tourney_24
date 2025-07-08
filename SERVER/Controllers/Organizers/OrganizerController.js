@@ -881,6 +881,58 @@ const getPaymentDetails = async (req,res)=>{
 
 
 
+const addSettings = async (req,res)=>{
+    try{
+        const organization = req.organizer;
+
+        if(!organization){
+            return res.json({success:false,message:"Session Ended Sign In Again Please" });
+        }
+
+        const organizer = await Organizer.findById(organization);
+
+        if(!organizer){
+            return res.json({success:false,message:"Organizer Not Found"});
+        }
+
+        const { TournamentId } = req.params;
+        // console.log(id);
+
+        const tournament = await Tournament.findById(TournamentId); // Pass the Tournament Id in parameter in Route
+
+        if(!tournament){
+            return res.json({success:false,message:"Tournament Not Found"});
+        }
+
+        const { askAdditionalInfo, askEmailFromPlayer, askMobileFromPlayer, showFixtures, seedingOptionInFixtures,
+customFields, tournamentUrl } = req.body;
+        // console.log(id);
+
+        tournament.settings = {
+            askAdditionalInfo, 
+            askEmailFromPlayer,
+            askMobileFromPlayer, 
+            showFixtures, 
+            seedingOptionInFixtures,
+            customFields,
+            tournamentUrl,
+        }
+
+        await tournament.save();
 
 
-export { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, checkOrganizerAuthorization, getCurrentOrganizer, logOut, createNewEvent, getAllEvents, createIndividual, createGroupTeam, getIndividualTeam, getGroupTeam, getPaymentDetails };
+        return res.json({success:true,message:'Settings Added SuccessFully '});
+
+    }catch(error){
+        console.log(`Error in Adding Settings ${error}`);
+        return res.json({success:false,message:`Error in Adding Settings Details ${error}`});
+    }
+}
+
+
+
+
+
+
+
+export { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, checkOrganizerAuthorization, getCurrentOrganizer, logOut, createNewEvent, getAllEvents, createIndividual, createGroupTeam, getIndividualTeam, getGroupTeam, getPaymentDetails, addSettings };
