@@ -690,7 +690,7 @@ const createGroupTeam = async(req,res)=>{
             if (!name || !email || !mobile || !academyName) {
                 return res.json({success:false,message:`All Fields are mandatory to Fill`});
             }
-
+     
             const check = await PlayerModel.findOne({email});
             if (!check) {
                 return res.json({success:false,message:`${email} is Not Registered in Tourney24`});

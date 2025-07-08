@@ -15,6 +15,10 @@ import generateSecureOTP from '../../Config/getOTP.js';
 
 import transporter from '../../Config/nodemailer.js';
 
+import Tournament from '../../Models/Organizer/Tournament.js';
+
+import Event from '../../Models/Organizer/Event.js';
+
 
 const signUp = async (req,res)=>{
     try{
@@ -130,6 +134,32 @@ const signUp = async (req,res)=>{
         res.json({success:false,message:`Error In Signup End Point ${error}`});
     }
 }
+
+const getAllPublicTournaments = async (req, res) => {
+    try {
+      // First try without type filter to see if you get any results
+      const tournaments = await Tournament.find({});
+      console.log("Tournaments found:", tournaments.length);
+    
+      return res.json({ success: true, message: tournaments });
+    } catch (error) {
+      console.error("Error fetching tournaments:", error);
+      return res.json({ success: false, message: "Error fetching tournaments" });
+    }
+  };
+  
+  const getTournamentEvents = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const events = await Event.find({ tournament: id });
+      console.log(events);
+      return res.json({ success: true, message: events });
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      return res.json({ success: false, message: "Error fetching events" });
+    }
+  };
+  
 
 
 
@@ -311,4 +341,4 @@ const logOut = async (req,res)=>{
 
 
 
-export { signUp,verifyEmailWithOTP,login, checkPlayerAuthorization, getCurrentPlayer, logOut };
+export { signUp,verifyEmailWithOTP,login, checkPlayerAuthorization, getCurrentPlayer, logOut, getAllPublicTournaments, getTournamentEvents };
