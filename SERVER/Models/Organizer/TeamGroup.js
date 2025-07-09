@@ -57,6 +57,10 @@ const TeamGroupSchema = new mongoose.Schema({
     dateAndTime:{
       type: String,
       required: true,
+    },
+    customFields: {
+      type: mongoose.Schema.Types.Mixed, // Store custom fields as an object
+      default: undefined
     }
 })
         

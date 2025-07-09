@@ -14,6 +14,12 @@ router.use(logAdminActivity);
 // ==================== DASHBOARD ROUTES ====================
 router.get("/dashboard", adminController.getDashboardOverview);
 
+// ==================== TOTAL COUNTS ROUTES ====================
+router.get("/total-organizations", adminController.getTotalOrganizations);
+router.get("/total-tournaments", adminController.getTotalTournaments);
+router.get("/total-events", adminController.getTotalEvents);
+router.get("/total-players", adminController.getTotalPlayers);
+
 // ==================== ORGANIZER ROUTES ====================
 router.post("/organizers", adminController.createOrganizer);
 router.get("/organizers", adminController.getAllOrganizers);

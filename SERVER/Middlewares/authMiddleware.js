@@ -98,9 +98,9 @@ export const logAdminActivity = (req, res, next) => {
     const url = req.originalUrl;
     const adminName = req.admin.name;
 
-    console.log(
-      `[${timestamp}] Admin Activity: ${adminName} - ${method} ${url}`
-    );
+    // console.log(
+    //   `[${timestamp}] Admin Activity: ${adminName} - ${method} ${url}`
+    // );
   }
   next();
 };

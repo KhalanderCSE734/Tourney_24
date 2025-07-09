@@ -49,6 +49,10 @@ const TeamIndividualSchema = new mongoose.Schema({
     dateAndTime:{
       type: String,
       required: true,
+    },
+     customFields: {
+      type: mongoose.Schema.Types.Mixed, 
+      default: undefined
     }
 })
         

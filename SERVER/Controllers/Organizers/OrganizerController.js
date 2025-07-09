@@ -458,6 +458,64 @@ const getParticularTournament = async (req,res)=>{
 }
 
 
+
+const getDashBoardData = async (req, res) => {
+  try {
+    const organization = req.organizer;
+
+    if (!organization) {
+      return res.json({ success: false, message: "Session Ended. Sign In Again Please." });
+    }
+
+    // Get organizer
+    const organizer = await Organizer.findById(organization);
+
+    if (!organizer) {
+      return res.json({ success: false, message: "Organizer Not Found" });
+    }
+
+    // 1. Total Tournaments
+    const tournaments = await Tournament.find({ organization });
+
+    // 2. Total Events
+    // Get all event ids from all tournaments
+    const allEventIds = tournaments.reduce((arr, t) => {
+      if (t.events && t.events.length > 0) {
+        arr.push(...t.events);
+      }
+      return arr;
+    }, []);
+    const totalEvents = allEventIds.length;
+
+    // 3. Total Participants (individual + group)
+    let totalParticipants = 0;
+    for (const t of tournaments) {
+      if (t.participantsIndividual) totalParticipants += t.participantsIndividual.length;
+      if (t.participantsGroup) totalParticipants += t.participantsGroup.length;
+    }
+
+    // 4. Total Members (memberAccess array in Organizer)
+    const totalMembers = organizer.memberAccess ? organizer.memberAccess.length : 0;
+
+    return res.json({
+      success: true,
+      dashboard_data: {
+        totalTournaments: tournaments.length,
+        totalEvents,
+        totalParticipants,
+        totalMembers
+      }
+    });
+  } catch (error) {
+    console.log(`Error In Getting Dashboard Data for Organizer ${error}`);
+    return res.json({ success: false, message: `Error In Getting Dashboard Data for Organizer ${error}` });
+  }
+};
+
+
+
+
+
 const createNewEvent = async (req,res)=>{
     try{
         const organization = req.organizer;
@@ -587,7 +645,7 @@ const createIndividual = async(req,res)=>{
 
         // console.log(req.body);
 
-        const { name, email, mobile, academyName, feesPaid,  } = req.body;
+        const { name, email, mobile, academyName, feesPaid, ...customFields } = req.body;
 
         if(!name || !email || !mobile || !academyName ){
             return res.json({success:false,message:`All Fields are mandatory to Fill`});
@@ -609,6 +667,7 @@ const createIndividual = async(req,res)=>{
             eventId,
             player:check._id,
             dateAndTime: new Date().toISOString(),
+            customFields: Object.keys(customFields).length > 0 ? customFields : undefined
         })
 
         tournament.participantsIndividual.push(newIndividual._id);
@@ -659,7 +718,7 @@ const createGroupTeam = async(req,res)=>{
 
         // console.log(req.body);
 
-        const { teamName, members } = req.body;
+        const { teamName, members, } = req.body;
         
         if(!teamName || !members){
             return res.json({success:false,message:`All Fields are mandatory`});
@@ -705,6 +764,7 @@ const createGroupTeam = async(req,res)=>{
                 mobile,
                 academyName,
                 feesPaid,
+                customFields: member.customFields || {},
             });
         }
 
@@ -1053,4 +1113,4 @@ const updateTournamentStatus = async (req, res) => {
 
 
 
-export { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, checkOrganizerAuthorization, getCurrentOrganizer, logOut, createNewEvent, getAllEvents, createIndividual, createGroupTeam, getIndividualTeam, getGroupTeam, getPaymentDetails, addSettings, sendMassMail, updateTournamentStatus };
+export { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, checkOrganizerAuthorization, getCurrentOrganizer, logOut, createNewEvent, getAllEvents, createIndividual, createGroupTeam, getIndividualTeam, getGroupTeam, getPaymentDetails, addSettings, sendMassMail, updateTournamentStatus, getDashBoardData };

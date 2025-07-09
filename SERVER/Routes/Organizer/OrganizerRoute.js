@@ -2,7 +2,7 @@ import express from 'express';
 
 const router = express.Router();
 
-import { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, getCurrentOrganizer, checkOrganizerAuthorization, logOut, createNewEvent, getAllEvents, createIndividual, createGroupTeam, getIndividualTeam, getGroupTeam, getPaymentDetails, addSettings, sendMassMail, updateTournamentStatus } from '../../Controllers/Organizers/OrganizerController.js';
+import { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, getCurrentOrganizer, checkOrganizerAuthorization, logOut, createNewEvent, getAllEvents, createIndividual, createGroupTeam, getIndividualTeam, getGroupTeam, getPaymentDetails, addSettings, sendMassMail, updateTournamentStatus, getDashBoardData } from '../../Controllers/Organizers/OrganizerController.js';
 
 import { organizerAuthMidlleware } from '../../Middlewares/jwtAuth.js';
 
@@ -27,5 +27,6 @@ router.post('/changeSettings/:TournamentId',organizerAuthMidlleware,addSettings)
 router.post('/sendMassMail/:TournamentId',organizerAuthMidlleware, sendMassMail);
 
 router.get('/updateTournamentStatus',updateTournamentStatus);
+router.get('/dashboard',organizerAuthMidlleware,getDashBoardData);
 
 export default router;

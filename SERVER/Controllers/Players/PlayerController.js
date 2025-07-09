@@ -341,4 +341,18 @@ const logOut = async (req,res)=>{
 
 
 
-export { signUp,verifyEmailWithOTP,login, checkPlayerAuthorization, getCurrentPlayer, logOut, getAllPublicTournaments, getTournamentEvents };
+const getTournamentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tournament = await Tournament.findById(id);
+    if (!tournament) {
+      return res.json({ success: false, message: 'Tournament not found' });
+    }
+    return res.json({ success: true, message: tournament });
+  } catch (error) {
+    console.error('Error fetching tournament:', error);
+    return res.json({ success: false, message: 'Error fetching tournament' });
+  }
+};
+
+export { signUp,verifyEmailWithOTP,login, checkPlayerAuthorization, getCurrentPlayer, logOut, getAllPublicTournaments, getTournamentEvents, getTournamentById };
