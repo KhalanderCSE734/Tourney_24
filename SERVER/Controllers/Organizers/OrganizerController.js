@@ -19,6 +19,8 @@ import generateSecureOTP from '../../Config/getOTP.js';
 
 import transporter from '../../Config/nodemailer.js';
 
+import { marked } from 'marked';
+
 
 const signUp = async (req,res)=>{
     try{
@@ -932,7 +934,123 @@ customFields, tournamentUrl } = req.body;
 
 
 
+const sendMassMail = async (req, res) => {
+  try {
+    const organization = req.organizer;
+
+    if (!organization) {
+      return res.json({ success: false, message: "Session Ended Sign In Again Please" });
+    }
+
+    const organizer = await Organizer.findById(organization);
+    if (!organizer) {
+      return res.json({ success: false, message: "Organizer Not Found" });
+    }
+
+    const { TournamentId } = req.params;
+    const tournament = await Tournament.findById(TournamentId);
+    if (!tournament) {
+      return res.json({ success: false, message: "Tournament Not Found" });
+    }
+
+    const { toAddresses, subject, content } = req.body;
+
+    if (!toAddresses || !subject || !content) {
+      return res.json({ success: false, message: `All Fields are mandatory to Fill` });
+    }
+
+    // Ensure toAddresses is an array
+    const recipients = Array.isArray(toAddresses)
+      ? toAddresses
+      : typeof toAddresses === 'string'
+        ? toAddresses.split(',').map(addr => addr.trim()).filter(Boolean)
+        : [];
+
+    if (recipients.length === 0) {
+      return res.json({ success: false, message: "No valid recipients provided." });
+    }
+
+    // You can use BCC for mass mailing, or send individually
+    // Here we send individually for better deliverability & logging
+    let successCount = 0;
+    let failCount = 0;
+    let failedEmails = [];
+
+    const htmlContent = marked.parse(content);
+
+    for (const email of recipients) {
+      try {
+        const mailOption = {
+          from: `Tourney 24 <${process.env.SENDER_EMAIL_SMT}>`,
+          to: email,
+          subject: subject,
+          html: htmlContent,
+        };
+
+        const info = await transporter.sendMail(mailOption);
+        // console.log(`Mail sent to ${email} with messageId: ${info.messageId}`);
+        successCount++;
+      } catch (err) {
+        console.log(`Error sending to ${email}:`, err.message);
+        failCount++;
+        failedEmails.push(email);
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: `Mail process complete. Sent: ${successCount}, Failed: ${failCount}`,
+      failedEmails
+    });
+
+  } catch (error) {
+    console.log(`Error in sendMassMail: ${error}`);
+    return res.json({ success: false, message: `Error in Sending Mails: ${error}` });
+  }
+};
 
 
 
-export { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, checkOrganizerAuthorization, getCurrentOrganizer, logOut, createNewEvent, getAllEvents, createIndividual, createGroupTeam, getIndividualTeam, getGroupTeam, getPaymentDetails, addSettings };
+const updateTournamentStatus = async (req, res) => {
+  try {
+    const tournaments = await Tournament.find();
+    const now = new Date();
+    let updated = [];
+
+    for (const tournament of tournaments) {
+      // Don't update if cancelled
+      if (tournament.status === 'cancelled') continue;
+
+      let newStatus = tournament.status;
+      if (now < tournament.startDate) {
+        newStatus = 'Upcoming';
+      } else if (now >= tournament.startDate && now <= tournament.endDate) {
+        newStatus = 'Active';
+      } else if (now > tournament.endDate) {
+        newStatus = 'Completed';
+      }
+
+      if (tournament.status !== newStatus) {
+        tournament.status = newStatus;
+        await tournament.save();
+        updated.push({ id: tournament._id, name: tournament.name, newStatus });
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: `Tournament statuses updated.`,
+      updatedTournaments: updated
+    });
+  } catch (error) {
+    console.log(`Error In Updating Tournament Status ${error}`);
+    return res.json({ success: false, message: `Error In Updating Tournament Status ${error}` });
+  }
+};
+
+
+
+
+
+
+export { signUp,verifyEmailWithOTP,login,createTournament,getAllTournaments,getParticularTournament, checkOrganizerAuthorization, getCurrentOrganizer, logOut, createNewEvent, getAllEvents, createIndividual, createGroupTeam, getIndividualTeam, getGroupTeam, getPaymentDetails, addSettings, sendMassMail, updateTournamentStatus };
