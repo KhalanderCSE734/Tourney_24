@@ -2,7 +2,7 @@ import express from 'express';
 const router = express.Router();
 
 
-import { signUp,verifyEmailWithOTP,login, checkPlayerAuthorization, getCurrentPlayer, logOut, getAllPublicTournaments, getTournamentEvents, getTournamentById } from '../../Controllers/Players/PlayerController.js';
+import { signUp,verifyEmailWithOTP,login, checkPlayerAuthorization, getCurrentPlayer, logOut, getAllPublicTournaments, getTournamentEvents, getTournamentById, createGroupTeam, createIndividual } from '../../Controllers/Players/PlayerController.js';
 
 import { userAuthMiddleware } from '../../Middlewares/jwtAuth.js';
 
@@ -20,6 +20,8 @@ router.get('/tournaments/:id', getTournamentById);
 router.get('/tournaments/:id/events', getTournamentEvents);
 
 
+router.post('/createIndividualTeam/:TournamentId/:eventId',userAuthMiddleware, createIndividual);
+router.post('/createGroupTeam/:TournamentId/:eventId',userAuthMiddleware, createGroupTeam);
 
 
 

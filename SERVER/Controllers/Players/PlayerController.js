@@ -17,7 +17,14 @@ import transporter from '../../Config/nodemailer.js';
 
 import Tournament from '../../Models/Organizer/Tournament.js';
 
-import Event from '../../Models/Organizer/Event.js';
+
+
+
+
+import TeamIndividual from '../../Models/Organizer/TeamIndividual.js';
+import TeamGroup from '../../Models/Organizer/TeamGroup.js';
+import Organizer from '../../Models/Organizer/OrganizerModel.js';
+import Events from '../../Models/Organizer/Event.js';
 
 
 const signUp = async (req,res)=>{
@@ -151,7 +158,7 @@ const getAllPublicTournaments = async (req, res) => {
   const getTournamentEvents = async (req, res) => {
     try {
       const { id } = req.params;
-      const events = await Event.find({ tournament: id });
+      const events = await Events.find({ tournament: id });
       console.log(events);
       return res.json({ success: true, message: events });
     } catch (error) {
@@ -355,4 +362,227 @@ const getTournamentById = async (req, res) => {
   }
 };
 
-export { signUp,verifyEmailWithOTP,login, checkPlayerAuthorization, getCurrentPlayer, logOut, getAllPublicTournaments, getTournamentEvents, getTournamentById };
+
+
+
+
+
+
+const createIndividual = async(req,res)=>{
+    try{
+        const  playerId  = req.user;
+        // console.log(userId);
+        if(!playerId){
+            return res.json({success:false,message:`Player is Not Authorized`});
+        }
+       
+        const player = await PlayerModel.findById(playerId).select(['-password']);
+
+        if(!player){
+            return res.json({success:false,message:`Player Doesn't Exist `});
+        }
+
+        const { TournamentId, eventId } = req.params;
+
+        if(!TournamentId || !eventId){
+            return res.json({success:false,message:`Tournament and Event Id's are mandatory for Creating Players `});
+        }
+
+        const tournament = await Tournament.findById(TournamentId);
+        const event = await Events.findById(eventId);
+
+        if(!tournament || !event){
+            return res.json({success:false,message:`Tournament (Event) Not Found`});
+        }
+
+        const organizer = await Organizer.findById(tournament.organization);
+
+        // console.log(req.body);
+
+        const { name, email, mobile, academyName, feesPaid, ...customFields } = req.body;
+
+        if(!name || !email || !mobile || !academyName ){
+            return res.json({success:false,message:`All Fields are mandatory to Fill`});
+        }
+
+        const check = await PlayerModel.findOne({email});
+        if(!check){
+            return res.json({success:false,message:`${email} is Not Registered in Tourney24`});
+        }
+
+        const newIndividual = await TeamIndividual.create({
+            name,
+            email,
+            mobile,
+            academyName,
+            feesPaid,
+            tournamentId:TournamentId,
+            event:event.name,
+            eventId,
+            entry:online,
+            player:check._id,
+            dateAndTime: new Date().toISOString(),
+            customFields: Object.keys(customFields).length > 0 ? customFields : undefined
+        })
+
+        tournament.participantsIndividual.push(newIndividual._id);
+        await tournament.save();
+
+        organizer.participantsIndividual.push(newIndividual._id);
+        await organizer.save();
+
+        event.participantsIndividual.push(newIndividual._id);
+        await event.save();
+
+        return res.json({success:true,message:'Individual Team Registered SuccessFully'});
+
+    }catch(error){
+        console.log('Error in Creating Indiviudal group ',error);
+        return res.json({success:false,message:'Error in Creating Player (Individual)'});
+    }
+}
+
+
+
+const createGroupTeam = async(req,res)=>{
+    try{
+        const  playerId  = req.user;
+        // console.log(userId);
+        if(!playerId){
+            return res.json({success:false,message:`Player is Not Authorized`});
+        }
+       
+        const player = await PlayerModel.findById(playerId).select(['-password']);
+
+        if(!player){
+            return res.json({success:false,message:`Player Doesn't Exist `});
+        }
+
+        const { TournamentId, eventId } = req.params;
+
+        if(!TournamentId || !eventId){
+            return res.json({success:false,message:`Tournament and Event Id's are mandatory for Creating Players `});
+        }
+
+        const tournament = await Tournament.findById(TournamentId);
+        const event = await Events.findById(eventId);
+
+        if(!tournament || !event){
+            return res.json({success:false,message:`Tournament (Event) Not Found`});
+        }
+
+        // console.log(req.body);
+
+        const organizer = await Organizer.findById(tournament.organization);
+
+        
+        
+
+        const { teamName, members, } = req.body;
+        
+        if(!teamName || !members){
+            return res.json({success:false,message:`All Fields are mandatory`});
+        }
+        let FinalMembers = [];
+        // members.forEach(async (member)=>{
+        //     const { name, email, mobile, academyName, feesPaid } = member;
+        //     if(!name || !email || !mobile || !academyName){
+        //         return res.json({success:false,message:`All Fields are mandatory to Fill`});
+        //     }
+        //     const check = await PlayerModel.findOne({email});
+        //     if(!check){
+        //         return res.json({success:false,message:`${email} is Not Registered in Tourney24`});
+        //     }
+        //     const memberDetails = {
+        //         player:check._id,
+        //         name,
+        //         email,
+        //         mobile,
+        //         academyName,
+        //         feesPaid,
+        //     }
+        //     FinalMembers.push(memberDetails);
+        // })
+
+
+        for (const member of members) {
+            const { name, email, mobile, academyName, feesPaid } = member;
+
+            if (!name || !email || !mobile || !academyName) {
+                return res.json({success:false,message:`All Fields are mandatory to Fill`});
+            }
+     
+            const check = await PlayerModel.findOne({email});
+            if (!check) {
+                return res.json({success:false,message:`${email} is Not Registered in Tourney24`});
+            }
+
+            FinalMembers.push({
+                player: check._id,
+                name,
+                email,
+                mobile,
+                academyName,
+                feesPaid,
+                customFields: member.customFields || {},
+            });
+        }
+
+
+        if (FinalMembers.length === 0) {
+            return res.json({ success: false, message: "No valid Registered players (In Tourney 24) found in the team" });
+        }
+
+
+
+
+        const newTeam = await TeamGroup.create({
+            teamName,
+            members:FinalMembers,
+            entry:'online',
+            event:event.name,
+            eventId,
+            tournamentId:TournamentId,
+            dateAndTime: new Date().toISOString(), 
+        })
+
+        tournament.participantsGroup.push(newTeam._id);
+        await tournament.save();
+
+        organizer.participantsGroup.push(newTeam._id);
+        await organizer.save();
+
+        event.participantsGroup.push(newTeam._id);
+        await event.save();
+
+
+        console.log("going Data");
+        return res.json({success:true,message:"New Team Created Successfully"});
+
+
+    }catch(error){
+        console.log('Error in Creating group Team ',error);
+        return res.json({success:false,message:'Error in Creating Players (Group)'});
+    }    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export { signUp,verifyEmailWithOTP,login, checkPlayerAuthorization, getCurrentPlayer, logOut, getAllPublicTournaments, getTournamentEvents, getTournamentById, createIndividual, createGroupTeam };
